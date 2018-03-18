@@ -1,0 +1,129 @@
+###Start up ij
+java org.apache.derby.tools.ij
+#Create a database
+ij> connect 'jdbc:derby:AssignmentDB;create=true';
+
+###exit ij:
+ij> exit;
+
+###Connect to a database
+###Start up ij again and connect to the database you just created:
+java org.apache.derby.tools.ij
+ij> connect 'jdbc:derby:AssignmentDB';
+
+###Disconnect from a database
+ij> disconnect;
+
+###Execute SQL statements
+ij> create table myTable(num int, addr varchar(40));
+
+/////============================================================//
+sed -i 's/\t/,/g' BUSINESS_NAMES_201803.csv
+awk -F ',' 'BEGIN{OFS=","}{if($1=="BUSINESS NAMES")($1=1); if($3=="Deregistered")($3=0);  if($3=="Registered")($3=1); print $0}' BUSINESS_NAMES_201803_bak.csv -> business_names_output.csv
+
+ij> 
+drop   table "APP".REGISTER;
+create table "APP".REGISTER
+(
+	REGISTER_ID SMALLINT NOT NULL primary key,
+	REGISTER_NAME CHAR(15)
+);
+INSERT INTO REGISTER(REGISTER_ID,REGISTER_NAME) VALUES(1,'BUSINESS NAMES');
+
+ij> 
+drop   table "APP".STATUS;
+create table "APP".STATUS
+(
+	STATUS_ID SMALLINT NOT NULL primary key,
+	STATUS varchar(15)
+);
+INSERT INTO STATUS(STATUS_ID,STATUS) VALUES(0,'Deregistered');
+INSERT INTO STATUS(STATUS_ID,STATUS) VALUES(1,'Registered');
+
+ij> 
+drop table "APP".BUSINESS_NAMES;
+create table "APP".BUSINESS_NAMES
+( 
+	ID INTEGER NOT NULL generated always as identity (START WITH 1, INCREMENT BY 1) primary key,
+	REGISTER_ID SMALLINT,
+	BN_NAME varchar(200),
+	BN_STATUS_ID SMALLINT,
+	BN_REG_DT date,
+	BN_CANCEL_DT date,
+	BN_RENEW_DT date,
+	BN_STATE_NUM varchar(20),
+	BN_STATE_OF_REG varchar(10),
+	BN_ABN varchar(15),
+	CONSTRAINT REG_FK
+	FOREIGN KEY (REGISTER_ID)
+	REFERENCES REGISTER (REGISTER_ID),
+	CONSTRAINT STATUS_FK
+	FOREIGN KEY (BN_STATUS_ID)
+	REFERENCES STATUS (STATUS_ID)
+);
+INSERT INTO BUSINESS_NAMES(REGISTER_ID,BN_NAME,BN_STATUS_ID,BN_REG_DT,BN_CANCEL_DT,BN_RENEW_DT,BN_STATE_NUM,BN_STATE_OF_REG,BN_ABN) VALUES (1,'tEST',0,'2017-01-01','2017-01-01','2017-01-01','abc','VIC','ABN123456789');
+INSERT INTO BUSINESS_NAMES(REGISTER_ID,BN_NAME,BN_STATUS_ID,BN_REG_DT,BN_CANCEL_DT,BN_RENEW_DT,BN_STATE_NUM,BN_STATE_OF_REG,BN_ABN) VALUES (1,'tEST GGG',1,'2017-01-01','2017-01-01','2017-01-01','abc','VIC','ABN123456789');
+ij> describe BUSINESS_NAMES;
+
+#import table command
+ij> SYSCS_UTIL.SYSCS_IMPORT_TABLE (IN SCHEMANAME VARCHAR(128),
+IN TABLENAME VARCHAR(128), IN FILENAME VARCHAR(32672),
+IN COLUMNDELIMITER CHAR(1), IN CHARACTERDELIMITER CHAR(1),
+IN CODESET VARCHAR(128), IN REPLACE SMALLINT)
+#display datetime command
+VALUES CURRENT_TIMESTAMP
+
+##assignment script
+sed -i 's/\t/,/g' BUSINESS_NAMES_201803.csv
+=====================================================
+sed -i 's/""//g' business_names.txt
+sed -i 's/"1"/1/g' business_names.txt
+sed -i 's/"0"/0/g' business_names.txt  
+=====================================================
+awk -F ',' 'BEGIN{OFS=","}{if($1=="1")($1=1); if($3=="0")($3=0);  if($3=="1")($3=1); print $0} END{print "Output done!"}' BUSINESS_NAMES_201803.csv > business_names_output.csv
+
+###====
+sed -i 's/\t/,/g' BUSINESS_NAMES_201803_example.csv 
+awk -F ',' 'BEGIN{OFS=","}{if($1=="BUSINESS NAMES")($1=1); if($3=="Deregistered")($3=0);  if($3=="Registered")($3=1); print $0} END{print "Output done!"}' BUSINESS_NAMES_201803_example.csv > business_names_output.csv
+
+autoSelect.sql
+connect 'jdbc:derby:AssignmentDB';
+VALUES CURRENT_TIMESTAMP;
+delete from BUSINESS_NAMES;
+delete from STATUS;
+delete from REGISTER;
+CALL SYSCS_UTIL.SYSCS_IMPORT_TABLE('APP','STATUS','/home/ec2-user/status.txt',';','"',null,0);
+CALL SYSCS_UTIL.SYSCS_IMPORT_TABLE('APP','REGISTER','/home/ec2-user/register.txt',';','"',null,0);
+CALL SYSCS_UTIL.SYSCS_IMPORT_DATA ('APP','BUSINESS_NAMES', 'REGISTER_ID,BN_NAME,BN_STATUS_ID,BN_REG_DT,BN_CANCEL_DT,BN_RENEW_DT,BN_STATE_NUM,BN_STATE_OF_REG,BN_ABN' ,null,'/home/ec2-user/business_names_output.csv',null, null,null,0);
+VALUES CURRENT_TIMESTAMP;
+ij> run '/home/ec2-user/myDerbyScript.sql';
+
+
+#sed command 
+sed -i 's/\t/,/g' BUSINESS_NAMES_201803_bak.csv
+sed -i 's/\t/,/g' BUSINESS_NAMES_201803_bak.csv 
+#awk command
+http://www.runoob.com/linux/linux-comm-awk.html
+awk执行时，其浏览标记为$1，$2...$n，这种方法称为域标记。
+使用$1，$3表示参照第1和第3域，注意这里使用逗号分隔域，使用$0表示使用所有域。
+例如:awk '{print $0}' temp.txt > sav.txt   
+表示打印所有域并把结果重定向到sav.txt中
+awk '{print $0}' temp.txt|tee sav.txt 
+和上例相似，不同的是将在屏幕上显示出来
+awk '{print $1,$4}' temp.txt
+只打印出第1和第4域
+awk 'BEGIN {print "NAME  GRADE\n----"} {print $1"\t"$4}' temp.txt
+表示打信息头，即输入的内容的第一行前加上"NAME  GRADE\n-------------"，同时内容以tab分开
+
+awk -F ',' 'BEGIN{OFS=","}{if($1=="BUSINESS NAMES")($1=1); print $1,$2,$3,$4,$5,$6,$7,$8,$9}' BUSINESS_NAMES_201803_bak.csv > output.csv
+
+
+
+
+
+
+
+
+
+
+ 
