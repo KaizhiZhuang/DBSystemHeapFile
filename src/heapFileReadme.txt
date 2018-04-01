@@ -1,2 +1,1 @@
-java dbload -p 81920000 BUSINESS_NAMES_201803.csv
-java dbload -p 81920000 BUSINESS_NAMES_201803_tab.csv
+java dbload -p 81920000 "BUSINESS_NAMES_201803_Heapfile.csv"
